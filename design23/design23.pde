@@ -30,6 +30,8 @@ public int TitleXPos = 92;
 public int TitleTextBoxW = 350;
 public float HeaderLineWeight = 0.5;
 
+public String FileName = "1_1c_barchart.csv";
+
 PShape states, statesOutline, alabama, alaska, arizona, arkansas, california, colorado, 
 connecticut, delaware, florida, georgia, hawaii, idaho, illinois, indiana, iowa, kansas, 
 kentucky, louisiana, maine, maryland, massachusetts, michigan, minnesota, mississippi, 
@@ -64,6 +66,8 @@ float headerLineWeight;
 int titleTextBoxW;
 int titleColor;
 int sourceColor;
+
+String fileName;
 
 PFont universCNBold, universCN, serifaBold, serifaRoman;
 
@@ -119,15 +123,14 @@ void setup () {
   titleTextBoxW.setWindow(controlWindow);
   Controller headerLineWeight = controlP5.addSlider("HeaderLineWeight", 0.0, 10.0, 10, 200, 250, 10);
   headerLineWeight.setWindow(controlWindow);
-  
+
   // Section color selector
   //cp = controlP5.addColorPicker("picker",0,0,255,20);
   //cp.setWindow(controlWindow);
 
   // File selection
-  Controller fileName = controlP5.addTextfield("File Name",10,220,250,20);
+  Controller fileName = controlP5.addTextfield("FileName", 10, 220, 250, 20);
   fileName.setWindow(controlWindow);
-
 
   controlWindow.setTitle("Control Panel");
 
@@ -186,15 +189,11 @@ void setup () {
   westVirginia = states.getChild("WV");
   wisconsin = states.getChild("WI");
   wyoming = states.getChild("WY");
-  
+
   universCNBold = loadFont("UniversCom-67BoldCond-48.vlw");
   universCN = loadFont("UniversCom-57Condensed-48.vlw");
   serifaBold = loadFont("SerifaStd-Bold-14.vlw");
   serifaRoman = loadFont("SerifaStd-Bold-14.vlw");
-
-
-  myTable = new Table(this, "1_1c_barchart.csv");
-
 }
 
 void draw () {
@@ -235,14 +234,15 @@ void draw () {
   titleColor = color(#231F20);
   sourceColor = color(#6D6E70);
 
-
+  fileName = FileName;
+  myTable = new Table(this, fileName);
 
   xAxis();
   getCBChart();
   headerDottedLine();
   mapCircle();
   shape(statesOutline, mapXPos, mapYPos);
-  
+
   if (recording) {
     endRecord();
     recording = false;
@@ -265,29 +265,17 @@ void getCBChart () {
     }
   }
 
-  //  int naValue = 0;
-  //  String naLabel;
-  //  
-  //  for (int i = 1; i < myTable.getRowCount(); i++) {
-  //    String na = myTable.getString(i, 1);
-  //    if (na.equals("na")) {
-  //      naLabel = myTable.getString(i, 1);
-  //      naValue = 0;
-  //    }
-  //  }
-
   for (int i = 1; i < myTable.getRowCount(); i++) {
     try {
       vo = new CBDataObjects();
 
+      String na = myTable.getString(i, 1);
       vo.cbdataState = myTable.getString(i, 0);
       vo.numPercent = myTable.getFloat(i, 1);
       vo.sectionColor = myTable.getFloat(i, 2);
       vo.chartID = myTable.getString(i, 3);
       vo.chartTitle = myTable.getString(i, 4);
       vo.chartSource = myTable.getString(i, 5);
-
-      //if (naLabel == "na") vo.numPercent = 0;
 
       boolean usAverage = vo.cbdataState.equals("UNITED STATES");
       boolean alabamaCheck = vo.cbdataState.equals("Alabama");
@@ -766,9 +754,15 @@ void getCBChart () {
       // Chart ------------------------------------------------------
 
       // Barchart
-      fill(barColor);
-      noStroke();
-      rect(chartXPos, barY + chartYPos + 5, w, barHeight);
+      if (na.equals("NA")) {
+        fill(barColor);
+        rect(chartXPos, barY + chartYPos + 5, 0, barHeight);
+      } 
+      else {
+        fill(barColor);
+        noStroke();
+        rect(chartXPos, barY + chartYPos + 5, w, barHeight);
+      }
 
       // Average line
       if (usAverage) {
@@ -798,7 +792,7 @@ void getCBChart () {
         rect(chartXPos + aboveAverage, barY + chartYPos + 5, w - aboveAverage, barHeight);
       }
 
-      if (vo.numPercent > 0) {
+      if (vo.numPercent > 0 || na.equals("NA")) {
         // States
         textAlign(RIGHT);
         if (usAverage) {
@@ -821,7 +815,11 @@ void getCBChart () {
           fill(textColor);
           textFont(universCN, 7);
         }
-        text(vo.numPercent + "%", chartXPos - 23, barY + chartYPos+10);
+        if (na.equals("NA")) {
+          text("NA", chartXPos - 23, barY + chartYPos+10);
+        } else {
+          text(vo.numPercent + "%", chartXPos - 23, barY + chartYPos+10);
+        }
       }
 
       // Chart Header ---------------------------------------------------------
@@ -935,9 +933,9 @@ void headerDottedLine () {
 }
 
 void keyPressed() {
-  if (key=='h') controlP5.window("controlP5window").hide();
-  if (key=='s') controlP5.window("controlP5window").show();
-  if (key=='p') {
+  if (key=='H') controlP5.window("controlP5window").hide();
+  if (key=='S') controlP5.window("controlP5window").show();
+  if (key=='P') {
     recording = true;
     //endRecord();
     //exit();
